@@ -17,6 +17,10 @@ import { nudgeCursorBackCmd, nudgeCursorForwardCmd } from "./commands/move-curso
 import { collapseMathCmd } from "./commands/collapse-math-cmd";
 import { IMathPluginState } from "./math-plugin";
 
+// preview
+
+import {Plugin} from "prosemirror-state"
+
 //// INLINE MATH NODEVIEW //////////////////////////////////
 
 export interface ICursorPosObserver {
@@ -31,6 +35,56 @@ interface IMathViewOptions {
 	tagName?: string;
 	/** Whether to render this node as display or inline math. */
 	katexOptions?:KatexOptions;
+}
+
+let PreviewPlugin = new Plugin({
+  view(editorView) { return new PreviewTooltip(editorView) }
+})
+
+class PreviewTooltip {
+  constructor(view) {
+    this.tooltip = document.createElement("div")
+    this.tooltip.className = "tooltip"
+    view.dom.parentNode.appendChild(this.tooltip)
+
+    this.update(view, null)
+  }
+
+  update(view, lastState) {
+    let state = view.state
+    // Don't do anything if the document/selection didn't change
+    if (lastState && lastState.doc.eq(state.doc) &&
+        lastState.selection.eq(state.selection)) return
+
+	    let content = this._node.content.content;
+let texString = "";
+if (content.length > 0 && content[0].textContent !== null) {
+	texString = content[0].textContent.trim();
+}
+
+    // Hide the tooltip if the selection is empty
+    if (texString.length == 0) {
+      this.tooltip.style.display = "none"
+      return
+    }
+
+    // Otherwise, reposition it and update its content
+    this.tooltip.style.display = ""
+	//    let {from, to} = state.selection
+	//    let start = view.coordsAtPos(from), end = view.coordsAtPos(to)
+    let box = this.tooltip.offsetParent.getBoundingClientRect()
+    this.tooltip.style.left = view.coordsAtPos(0).left + "px" //start.left + "px"
+    this.tooltip.style.bottom = (box.bottom - start.top) + "px"
+
+	try {
+		katex.render(texString, this.tooltip, Object.assign({ globalGroup: true, throwOnError: false }, options.katexOptions);
+);
+	} catch (err) {
+		this.tooltip.textContent = "ERROR"
+	}
+  }
+
+  destroy() { this.tooltip.remove() }
 }
 
 export class MathView implements NodeView, ICursorPosObserver {
@@ -293,7 +347,7 @@ export class MathView implements NodeView, ICursorPosObserver {
 					"ArrowRight" : collapseMathCmd(this._outerView, +1, true),
 					"ArrowUp"    : collapseMathCmd(this._outerView, -1, true),
 					"ArrowDown"  : collapseMathCmd(this._outerView, +1, true),
-				})]
+				}), PreviewPlugin]
 			}),
 			dispatchTransaction: this.dispatchInner.bind(this)
 		})
