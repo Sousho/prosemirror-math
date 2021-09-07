@@ -42,16 +42,16 @@ let PreviewPlugin = new Plugin({
 })
 
 class PreviewTooltip {
-  constructor(view) {
+  constructor(equation) {
     this.tooltip = document.createElement("div")
     this.tooltip.className = "tooltip"
-    view.dom.parentNode.appendChild(this.tooltip)
+    equation.dom.parentNode.appendChild(this.tooltip)
 
-    this.update(view, null)
+    this.update(equation, null)
   }
 
-  update(view, lastState) {
-    let state = view.state
+  update(equation, lastState) {
+    let state = equation.state
     // Don't do anything if the document/selection didn't change
     if (lastState && lastState.doc.eq(state.doc) &&
         lastState.selection.eq(state.selection)) return
@@ -73,12 +73,11 @@ if (content.length > 0 && content[0].textContent !== null) {
 	//    let {from, to} = state.selection
 	//    let start = view.coordsAtPos(from), end = view.coordsAtPos(to)
     let box = this.tooltip.offsetParent.getBoundingClientRect()
-    this.tooltip.style.left = view.coordsAtPos(0).left + "px" //start.left + "px"
+    this.tooltip.style.left = equation.coordsAtPos(0).left + "px" //start.left + "px"
     this.tooltip.style.bottom = (box.bottom - start.top) + "px"
 
 	try {
-		katex.render(texString, this.tooltip, Object.assign({ globalGroup: true, throwOnError: false }, options.katexOptions);
-);
+		katex.render(texString, this.tooltip, Object.assign({ globalGroup: true, throwOnError: false }, options.katexOptions));
 	} catch (err) {
 		this.tooltip.textContent = "ERROR"
 	}
